@@ -1,7 +1,7 @@
 """
 Page d'import unifiée - Section unique avec 3 options
 Import Excel, Saisie Manuelle, Import OCR (non actif)
-Compatible avec le main.py mis à jour
+CORRECTION: Navigation vers l'analyse après succès
 """
 
 import streamlit as st
@@ -22,6 +22,12 @@ def show_unified_input_page():
     st.title("📊 Analyse des États Financiers - BCEAO")
     st.markdown("*Choisissez votre méthode de saisie des données financières*")
     st.markdown("---")
+    
+    # CORRECTION: Vérifier si une analyse vient d'être terminée et rediriger automatiquement
+    if st.session_state.get('analysis_just_completed', False):
+        st.session_state['analysis_just_completed'] = False  # Reset du flag
+        SessionManager.set_current_page('analysis')
+        st.rerun()
     
     # SECTION UNIQUE - Choix de la méthode
     st.header("🔧 Méthode de Saisie des Données")
@@ -714,7 +720,7 @@ def validate_financial_data(data):
     return errors, warnings
 
 def analyze_excel_file(file_content, filename, secteur):
-    """Analyse le fichier Excel uploadé"""
+    """CORRECTION: Analyse le fichier Excel avec redirection automatique"""
     
     try:
         with st.spinner("📊 Analyse du fichier Excel en cours..."):
@@ -767,7 +773,7 @@ def analyze_excel_file(file_content, filename, secteur):
                 # Réinitialiser le flag
                 st.session_state['analysis_running'] = False
                 
-                # Proposition de navigation
+                # CORRECTION: Proposer la navigation avec redirection automatique
                 col1, col2 = st.columns(2)
                 
                 reset_counter = SessionManager.get_reset_counter()
@@ -775,6 +781,7 @@ def analyze_excel_file(file_content, filename, secteur):
                 with col1:
                     goto_analysis_key = f"goto_analysis_excel_{reset_counter}"
                     if st.button("📊 Voir l'Analyse Complète", key=goto_analysis_key, type="primary"):
+                        # CORRECTION: Redirection immédiate vers l'analyse
                         SessionManager.set_current_page('analysis')
                         st.rerun()
                 
@@ -783,6 +790,18 @@ def analyze_excel_file(file_content, filename, secteur):
                     if st.button("📋 Générer un Rapport", key=goto_reports_key, type="secondary"):
                         SessionManager.set_current_page('reports')
                         st.rerun()
+                
+                # CORRECTION: Auto-redirection après 3 secondes (optionnel)
+                st.info("💡 **Cliquez sur 'Voir l'Analyse Complète' pour accéder aux détails ou attendez la redirection automatique...**")
+                
+                # IMPORTANT: Marquer que l'analyse vient d'être complétée
+                st.session_state['analysis_just_completed'] = True
+                
+                # Auto-redirection après un délai
+                import time
+                time.sleep(1)  # Délai pour que l'utilisateur voie le message
+                SessionManager.set_current_page('analysis')
+                st.rerun()
                 
             finally:
                 # Nettoyer le fichier temporaire
@@ -794,7 +813,7 @@ def analyze_excel_file(file_content, filename, secteur):
         st.session_state['analysis_running'] = False
 
 def analyze_manual_data(data, secteur):
-    """Analyse les données saisies manuellement"""
+    """CORRECTION: Analyse les données saisies avec redirection automatique"""
     
     try:
         with st.spinner("📊 Analyse des données saisies..."):
@@ -834,7 +853,7 @@ def analyze_manual_data(data, secteur):
             **Classe :** {SessionManager.get_financial_class(score_global)}
             """)
             
-            # Proposition de navigation
+            # Proposition de navigation avec redirection automatique
             col1, col2 = st.columns(2)
             
             reset_counter = SessionManager.get_reset_counter()
@@ -842,6 +861,7 @@ def analyze_manual_data(data, secteur):
             with col1:
                 goto_analysis_key = f"goto_analysis_manual_{reset_counter}"
                 if st.button("📊 Voir l'Analyse Complète", key=goto_analysis_key, type="primary"):
+                    # CORRECTION: Redirection immédiate vers l'analyse
                     SessionManager.set_current_page('analysis')
                     st.rerun()
             
@@ -850,6 +870,18 @@ def analyze_manual_data(data, secteur):
                 if st.button("📋 Générer un Rapport", key=goto_reports_key, type="secondary"):
                     SessionManager.set_current_page('reports')
                     st.rerun()
+            
+            # CORRECTION: Auto-redirection après message
+            st.info("💡 **Redirection automatique vers l'analyse complète...**")
+            
+            # IMPORTANT: Marquer que l'analyse vient d'être complétée
+            st.session_state['analysis_just_completed'] = True
+            
+            # Auto-redirection immédiate
+            import time
+            time.sleep(1)
+            SessionManager.set_current_page('analysis')
+            st.rerun()
     
     except Exception as e:
         st.error(f"❌ Erreur lors de l'analyse: {str(e)}")
