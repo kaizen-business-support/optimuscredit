@@ -232,7 +232,7 @@ def show_analysis_overview(data, ratios, scores, metadata):
     create_performance_radar(scores)
 
 def show_detailed_balance_sheet(data):
-    """Affiche le bilan détaillé avec grandes masses en gras"""
+    """Affiche le bilan détaillé avec grandes masses en gras - CORRIGÉ"""
     
     st.header("🏦 Bilan Détaillé")
     
@@ -241,55 +241,133 @@ def show_detailed_balance_sheet(data):
     with col1:
         st.markdown("## **ACTIF**")
         
-        # Créer le DataFrame pour l'actif avec structure détaillée
-        actif_data = []
+        # IMMOBILISATIONS avec style HTML pour gras
+        st.markdown("### **IMMOBILISATIONS**")
         
-        # IMMOBILISATIONS (Grande masse en gras)
-        actif_data.append(["**IMMOBILISATIONS**", "**Montant (FCFA)**"])
-        
-        # Immobilisations corporelles
+        # Immobilisations corporelles avec affichage détaillé
         if data.get('terrains', 0) > 0:
-            actif_data.append(["  • Terrains", f"{data.get('terrains', 0):,.0f}"])
+            st.write(f"• Terrains : **{data.get('terrains', 0):,.0f}** FCFA")
         if data.get('batiments', 0) > 0:
-            actif_data.append(["  • Bâtiments", f"{data.get('batiments', 0):,.0f}"])
+            st.write(f"• Bâtiments : **{data.get('batiments', 0):,.0f}** FCFA")
         if data.get('materiel_mobilier', 0) > 0:
-            actif_data.append(["  • Matériel et mobilier", f"{data.get('materiel_mobilier', 0):,.0f}"])
+            st.write(f"• Matériel et mobilier : **{data.get('materiel_mobilier', 0):,.0f}** FCFA")
         if data.get('materiel_transport', 0) > 0:
-            actif_data.append(["  • Matériel de transport", f"{data.get('materiel_transport', 0):,.0f}"])
+            st.write(f"• Matériel de transport : **{data.get('materiel_transport', 0):,.0f}** FCFA")
+        if data.get('titres_participation', 0) > 0:
+            st.write(f"• Titres de participation : **{data.get('titres_participation', 0):,.0f}** FCFA")
         
-        # Total immobilisations en gras
-        actif_data.append(["**Total Immobilisations**", f"**{data.get('immobilisations_nettes', 0):,.0f}**"])
-        actif_data.append(["", ""])  # Ligne vide
+        # Total immobilisations en couleur
+        st.markdown(f"### 🔵 **TOTAL IMMOBILISATIONS : {data.get('immobilisations_nettes', 0):,.0f} FCFA**")
         
-        # ACTIF CIRCULANT (Grande masse en gras)
-        actif_data.append(["**ACTIF CIRCULANT**", ""])
+        st.markdown("---")
+        
+        # ACTIF CIRCULANT
+        st.markdown("### **ACTIF CIRCULANT**")
         
         if data.get('stocks', 0) > 0:
-            actif_data.append(["  • Stocks", f"{data.get('stocks', 0):,.0f}"])
+            st.write(f"• Stocks : **{data.get('stocks', 0):,.0f}** FCFA")
         if data.get('creances_clients', 0) > 0:
-            actif_data.append(["  • Créances clients", f"{data.get('creances_clients', 0):,.0f}"])
+            st.write(f"• Créances clients : **{data.get('creances_clients', 0):,.0f}** FCFA")
         if data.get('autres_creances', 0) > 0:
-            actif_data.append(["  • Autres créances", f"{data.get('autres_creances', 0):,.0f}"])
+            st.write(f"• Autres créances : **{data.get('autres_creances', 0):,.0f}** FCFA")
+        if data.get('fournisseurs_avances_versees', 0) > 0:
+            st.write(f"• Fournisseurs - avances versées : **{data.get('fournisseurs_avances_versees', 0):,.0f}** FCFA")
         
         # Total actif circulant
-        actif_data.append(["**Total Actif Circulant**", f"**{data.get('total_actif_circulant', 0):,.0f}**"])
-        actif_data.append(["", ""])  # Ligne vide
+        st.markdown(f"### 🔵 **TOTAL ACTIF CIRCULANT : {data.get('total_actif_circulant', 0):,.0f} FCFA**")
         
-        # TRÉSORERIE ACTIF (Grande masse en gras)
-        actif_data.append(["**TRÉSORERIE ACTIF**", ""])
+        st.markdown("---")
+        
+        # TRÉSORERIE ACTIF
+        st.markdown("### **TRÉSORERIE ACTIF**")
         if data.get('banques_caisses', 0) > 0:
-            actif_data.append(["  • Banques et caisses", f"{data.get('banques_caisses', 0):,.0f}"])
+            st.write(f"• Banques et caisses : **{data.get('banques_caisses', 0):,.0f}** FCFA")
         if data.get('titres_placement', 0) > 0:
-            actif_data.append(["  • Titres de placement", f"{data.get('titres_placement', 0):,.0f}"])
+            st.write(f"• Titres de placement : **{data.get('titres_placement', 0):,.0f}** FCFA")
+        if data.get('valeurs_encaisser', 0) > 0:
+            st.write(f"• Valeurs à encaisser : **{data.get('valeurs_encaisser', 0):,.0f}** FCFA")
         
-        actif_data.append(["**Total Trésorerie Actif**", f"**{data.get('tresorerie', 0):,.0f}**"])
-        actif_data.append(["", ""])  # Ligne vide
+        st.markdown(f"### 🔵 **TOTAL TRÉSORERIE ACTIF : {data.get('tresorerie', 0):,.0f} FCFA**")
+        
+        st.markdown("---")
         
         # TOTAL GÉNÉRAL ACTIF
-        actif_data.append(["**TOTAL GÉNÉRAL ACTIF**", f"**{data.get('total_actif', 0):,.0f}**"])
+        st.markdown(f"### 🟢 **TOTAL GÉNÉRAL ACTIF : {data.get('total_actif', 0):,.0f} FCFA**")
+    
+    with col2:
+        st.markdown("## **PASSIF**")
         
-        # Affichage du tableau actif
-        df_actif = pd.DataFrame(actif_data, columns=["Poste", "Montant (FCFA)"])
+        # CAPITAUX PROPRES avec style HTML pour gras
+        st.markdown("### **CAPITAUX PROPRES**")
+        
+        if data.get('capital', 0) > 0:
+            st.write(f"• Capital social : **{data.get('capital', 0):,.0f}** FCFA")
+        if data.get('reserves', 0) > 0:
+            st.write(f"• Réserves : **{data.get('reserves', 0):,.0f}** FCFA")
+        if data.get('reserves_indisponibles', 0) > 0:
+            st.write(f"• Réserves indisponibles : **{data.get('reserves_indisponibles', 0):,.0f}** FCFA")
+        if data.get('reserves_libres', 0) > 0:
+            st.write(f"• Réserves libres : **{data.get('reserves_libres', 0):,.0f}** FCFA")
+        if data.get('report_nouveau', 0) != 0:
+            st.write(f"• Report à nouveau : **{data.get('report_nouveau', 0):,.0f}** FCFA")
+        if data.get('resultat_net', 0) != 0:
+            st.write(f"• Résultat net : **{data.get('resultat_net', 0):,.0f}** FCFA")
+        if data.get('subventions_investissement', 0) > 0:
+            st.write(f"• Subventions d'investissement : **{data.get('subventions_investissement', 0):,.0f}** FCFA")
+        
+        # Total capitaux propres en couleur
+        st.markdown(f"### 🔵 **TOTAL CAPITAUX PROPRES : {data.get('capitaux_propres', 0):,.0f} FCFA**")
+        
+        st.markdown("---")
+        
+        # DETTES FINANCIÈRES
+        st.markdown("### **DETTES FINANCIÈRES**")
+        
+        if data.get('emprunts_dettes_financieres', 0) > 0:
+            st.write(f"• Emprunts et dettes financières : **{data.get('emprunts_dettes_financieres', 0):,.0f}** FCFA")
+        if data.get('emprunts_bancaires', 0) > 0:
+            st.write(f"• Emprunts bancaires : **{data.get('emprunts_bancaires', 0):,.0f}** FCFA")
+        if data.get('autres_dettes_financieres', 0) > 0:
+            st.write(f"• Autres dettes financières : **{data.get('autres_dettes_financieres', 0):,.0f}** FCFA")
+        if data.get('provisions_financieres', 0) > 0:
+            st.write(f"• Provisions financières : **{data.get('provisions_financieres', 0):,.0f}** FCFA")
+        
+        st.markdown(f"### 🔵 **TOTAL DETTES FINANCIÈRES : {data.get('dettes_financieres', 0):,.0f} FCFA**")
+        
+        st.markdown("---")
+        
+        # DETTES COURT TERME
+        st.markdown("### **DETTES COURT TERME**")
+        
+        if data.get('fournisseurs_exploitation', 0) > 0:
+            st.write(f"• Fournisseurs d'exploitation : **{data.get('fournisseurs_exploitation', 0):,.0f}** FCFA")
+        if data.get('fournisseurs', 0) > 0:
+            st.write(f"• Dettes fournisseurs : **{data.get('fournisseurs', 0):,.0f}** FCFA")
+        if data.get('dettes_sociales_fiscales', 0) > 0:
+            st.write(f"• Dettes sociales et fiscales : **{data.get('dettes_sociales_fiscales', 0):,.0f}** FCFA")
+        if data.get('autres_dettes', 0) > 0:
+            st.write(f"• Autres dettes : **{data.get('autres_dettes', 0):,.0f}** FCFA")
+        if data.get('clients_avances_recues', 0) > 0:
+            st.write(f"• Clients - avances reçues : **{data.get('clients_avances_recues', 0):,.0f}** FCFA")
+        
+        st.markdown(f"### 🔵 **TOTAL DETTES COURT TERME : {data.get('dettes_court_terme', 0):,.0f} FCFA**")
+        
+        st.markdown("---")
+        
+        # TRÉSORERIE PASSIF
+        if data.get('tresorerie_passif', 0) > 0:
+            st.markdown("### **TRÉSORERIE PASSIF**")
+            if data.get('banques_credits_tresorerie', 0) > 0:
+                st.write(f"• Banques - crédits de trésorerie : **{data.get('banques_credits_tresorerie', 0):,.0f}** FCFA")
+            if data.get('banques_credits_escompte', 0) > 0:
+                st.write(f"• Banques - crédits d'escompte : **{data.get('banques_credits_escompte', 0):,.0f}** FCFA")
+            st.markdown(f"### 🔵 **TOTAL TRÉSORERIE PASSIF : {data.get('tresorerie_passif', 0):,.0f} FCFA**")
+            st.markdown("---")
+        
+        # TOTAL GÉNÉRAL PASSIF
+        total_passif = (data.get('capitaux_propres', 0) + data.get('dettes_financieres', 0) + 
+                       data.get('dettes_court_terme', 0) + data.get('tresorerie_passif', 0))
+        st.markdown(f"### 🟢 **TOTAL GÉNÉRAL PASSIF : {total_passif:,.0f} FCFA**")
         st.dataframe(df_actif, hide_index=True, use_container_width=True)
     
     with col2:
@@ -375,7 +453,7 @@ def show_detailed_balance_sheet(data):
             st.error(f"❌ **Bilan déséquilibré** (écart: {equilibre:,.0f})")
 
 def show_detailed_income_statement(data):
-    """Affiche le compte de résultat détaillé avec grandes masses en gras"""
+    """Affiche le compte de résultat détaillé avec grandes masses en gras - CORRIGÉ"""
     
     st.header("📈 Compte de Résultat Détaillé")
     
@@ -384,127 +462,182 @@ def show_detailed_income_statement(data):
     with col1:
         st.markdown("## **PRODUITS**")
         
-        # Créer le DataFrame pour les produits
-        produits_data = []
+        # CHIFFRE D'AFFAIRES avec style HTML pour gras
+        st.markdown("### **CHIFFRE D'AFFAIRES**")
         
-        # CHIFFRE D'AFFAIRES (Grande masse en gras)
-        produits_data.append(["**CHIFFRE D'AFFAIRES**", "**Montant (FCFA)**"])
-        
+        # Affichage détaillé ligne par ligne
         if data.get('ventes_marchandises', 0) > 0:
-            produits_data.append(["  • Ventes de marchandises", f"{data.get('ventes_marchandises', 0):,.0f}"])
+            st.write(f"• Ventes de marchandises : **{data.get('ventes_marchandises', 0):,.0f}** FCFA")
         if data.get('ventes_produits_fabriques', 0) > 0:
-            produits_data.append(["  • Ventes de produits fabriqués", f"{data.get('ventes_produits_fabriques', 0):,.0f}"])
+            st.write(f"• Ventes de produits fabriqués : **{data.get('ventes_produits_fabriques', 0):,.0f}** FCFA")
         if data.get('travaux_services_vendus', 0) > 0:
-            produits_data.append(["  • Travaux et services vendus", f"{data.get('travaux_services_vendus', 0):,.0f}"])
+            st.write(f"• Travaux et services vendus : **{data.get('travaux_services_vendus', 0):,.0f}** FCFA")
+        if data.get('produits_accessoires', 0) > 0:
+            st.write(f"• Produits accessoires : **{data.get('produits_accessoires', 0):,.0f}** FCFA")
         
-        produits_data.append(["**Total Chiffre d'Affaires**", f"**{data.get('chiffre_affaires', 0):,.0f}**"])
-        produits_data.append(["", ""])  # Ligne vide
+        # Marge commerciale si applicable
+        if data.get('marge_commerciale', 0) > 0:
+            st.write(f"• Marge commerciale : **{data.get('marge_commerciale', 0):,.0f}** FCFA")
+        
+        # Total CA en couleur
+        st.markdown(f"### 🔵 **TOTAL CHIFFRE D'AFFAIRES : {data.get('chiffre_affaires', 0):,.0f} FCFA**")
+        
+        st.markdown("---")
         
         # AUTRES PRODUITS
-        if data.get('autres_produits', 0) > 0:
-            produits_data.append(["**AUTRES PRODUITS**", ""])
-            produits_data.append(["  • Autres produits d'exploitation", f"{data.get('autres_produits', 0):,.0f}"])
-            produits_data.append(["", ""])
+        if (data.get('autres_produits', 0) > 0 or data.get('production_stockee', 0) > 0 or 
+            data.get('production_immobilisee', 0) > 0 or data.get('subventions_exploitation', 0) > 0):
+            
+            st.markdown("### **AUTRES PRODUITS D'EXPLOITATION**")
+            
+            if data.get('production_stockee', 0) > 0:
+                st.write(f"• Production stockée : **{data.get('production_stockee', 0):,.0f}** FCFA")
+            if data.get('production_immobilisee', 0) > 0:
+                st.write(f"• Production immobilisée : **{data.get('production_immobilisee', 0):,.0f}** FCFA")
+            if data.get('subventions_exploitation', 0) > 0:
+                st.write(f"• Subventions d'exploitation : **{data.get('subventions_exploitation', 0):,.0f}** FCFA")
+            if data.get('autres_produits', 0) > 0:
+                st.write(f"• Autres produits : **{data.get('autres_produits', 0):,.0f}** FCFA")
+            
+            st.markdown("---")
         
         # PRODUITS FINANCIERS
         if data.get('revenus_financiers', 0) > 0:
-            produits_data.append(["**PRODUITS FINANCIERS**", ""])
-            produits_data.append(["  • Revenus financiers", f"{data.get('revenus_financiers', 0):,.0f}"])
-            produits_data.append(["**Total Produits Financiers**", f"**{data.get('revenus_financiers', 0):,.0f}**"])
-            produits_data.append(["", ""])
+            st.markdown("### **PRODUITS FINANCIERS**")
+            st.write(f"• Revenus financiers : **{data.get('revenus_financiers', 0):,.0f}** FCFA")
+            st.markdown("---")
         
         # TOTAL GÉNÉRAL PRODUITS
         total_produits = (data.get('chiffre_affaires', 0) + data.get('autres_produits', 0) + 
-                         data.get('revenus_financiers', 0))
-        produits_data.append(["**TOTAL GÉNÉRAL PRODUITS**", f"**{total_produits:,.0f}**"])
-        
-        # Affichage du tableau produits
-        df_produits = pd.DataFrame(produits_data, columns=["Poste", "Montant (FCFA)"])
-        st.dataframe(df_produits, hide_index=True, use_container_width=True)
+                         data.get('production_stockee', 0) + data.get('production_immobilisee', 0) +
+                         data.get('subventions_exploitation', 0) + data.get('revenus_financiers', 0))
+        st.markdown(f"### 🟢 **TOTAL GÉNÉRAL PRODUITS : {total_produits:,.0f} FCFA**")
     
     with col2:
         st.markdown("## **CHARGES**")
         
-        # Créer le DataFrame pour les charges
-        charges_data = []
+        # CHARGES D'EXPLOITATION avec détail complet
+        st.markdown("### **CHARGES D'EXPLOITATION**")
         
-        # CHARGES D'EXPLOITATION (Grande masse en gras)
-        charges_data.append(["**CHARGES D'EXPLOITATION**", "**Montant (FCFA)**"])
+        # Achats détaillés
+        if (data.get('achats_marchandises', 0) > 0 or data.get('achats_matieres_premieres', 0) > 0 or 
+            data.get('autres_achats', 0) > 0):
+            st.markdown("**Achats :**")
+            if data.get('achats_marchandises', 0) > 0:
+                st.write(f"• Achats de marchandises : **{data.get('achats_marchandises', 0):,.0f}** FCFA")
+            if data.get('achats_matieres_premieres', 0) > 0:
+                st.write(f"• Achats matières premières : **{data.get('achats_matieres_premieres', 0):,.0f}** FCFA")
+            if data.get('autres_achats', 0) > 0:
+                st.write(f"• Autres achats : **{data.get('autres_achats', 0):,.0f}** FCFA")
         
-        # Achats
-        if data.get('achats_marchandises', 0) > 0:
-            charges_data.append(["  • Achats de marchandises", f"{data.get('achats_marchandises', 0):,.0f}"])
-        if data.get('achats_matieres_premieres', 0) > 0:
-            charges_data.append(["  • Achats matières premières", f"{data.get('achats_matieres_premieres', 0):,.0f}"])
-        if data.get('autres_achats', 0) > 0:
-            charges_data.append(["  • Autres achats", f"{data.get('autres_achats', 0):,.0f}"])
-        
-        # Charges externes
-        if data.get('charges_externes', 0) > 0:
-            charges_data.append(["  • Charges externes", f"{data.get('charges_externes', 0):,.0f}"])
+        # Charges externes détaillées
+        if (data.get('transports', 0) > 0 or data.get('services_exterieurs', 0) > 0 or 
+            data.get('impots_taxes', 0) > 0 or data.get('autres_charges', 0) > 0):
+            st.markdown("**Charges externes :**")
+            if data.get('transports', 0) > 0:
+                st.write(f"• Transports : **{data.get('transports', 0):,.0f}** FCFA")
+            if data.get('services_exterieurs', 0) > 0:
+                st.write(f"• Services extérieurs : **{data.get('services_exterieurs', 0):,.0f}** FCFA")
+            if data.get('impots_taxes', 0) > 0:
+                st.write(f"• Impôts et taxes : **{data.get('impots_taxes', 0):,.0f}** FCFA")
+            if data.get('autres_charges', 0) > 0:
+                st.write(f"• Autres charges : **{data.get('autres_charges', 0):,.0f}** FCFA")
         
         # Charges de personnel
-        charges_data.append(["  • Charges de personnel", f"{data.get('charges_personnel', 0):,.0f}"])
+        if data.get('charges_personnel', 0) > 0:
+            st.write(f"• **Charges de personnel : {data.get('charges_personnel', 0):,.0f} FCFA**")
         
         # Amortissements
         if data.get('dotations_amortissements', 0) > 0:
-            charges_data.append(["  • Dotations amortissements", f"{data.get('dotations_amortissements', 0):,.0f}"])
+            st.write(f"• **Dotations amortissements : {data.get('dotations_amortissements', 0):,.0f} FCFA**")
         
-        charges_data.append(["**Total Charges d'Exploitation**", f"**{data.get('charges_exploitation', 0):,.0f}**"])
-        charges_data.append(["", ""])  # Ligne vide
+        # Total charges d'exploitation
+        st.markdown(f"### 🔵 **TOTAL CHARGES D'EXPLOITATION : {data.get('charges_exploitation', 0):,.0f} FCFA**")
+        
+        st.markdown("---")
         
         # CHARGES FINANCIÈRES
         if data.get('frais_financiers', 0) > 0:
-            charges_data.append(["**CHARGES FINANCIÈRES**", ""])
-            charges_data.append(["  • Frais financiers", f"{data.get('frais_financiers', 0):,.0f}"])
-            charges_data.append(["**Total Charges Financières**", f"**{data.get('frais_financiers', 0):,.0f}**"])
-            charges_data.append(["", ""])
+            st.markdown("### **CHARGES FINANCIÈRES**")
+            st.write(f"• Frais financiers : **{data.get('frais_financiers', 0):,.0f}** FCFA")
+            st.markdown("---")
         
         # IMPÔTS SUR LES BÉNÉFICES
         if data.get('impots_resultat', 0) > 0:
-            charges_data.append(["**IMPÔTS SUR BÉNÉFICES**", ""])
-            charges_data.append(["  • Impôts sur le résultat", f"{data.get('impots_resultat', 0):,.0f}"])
-            charges_data.append(["", ""])
+            st.markdown("### **IMPÔTS SUR BÉNÉFICES**")
+            st.write(f"• Impôts sur le résultat : **{data.get('impots_resultat', 0):,.0f}** FCFA")
+            st.markdown("---")
         
         # TOTAL GÉNÉRAL CHARGES
         total_charges = (data.get('charges_exploitation', 0) + data.get('frais_financiers', 0) + 
                         data.get('impots_resultat', 0))
-        charges_data.append(["**TOTAL GÉNÉRAL CHARGES**", f"**{total_charges:,.0f}**"])
-        
-        # Affichage du tableau charges
-        df_charges = pd.DataFrame(charges_data, columns=["Poste", "Montant (FCFA)"])
-        st.dataframe(df_charges, hide_index=True, use_container_width=True)
+        st.markdown(f"### 🔴 **TOTAL GÉNÉRAL CHARGES : {total_charges:,.0f} FCFA**")
     
     # SOLDES INTERMÉDIAIRES DE GESTION
     st.markdown("---")
     st.markdown("## **SOLDES INTERMÉDIAIRES DE GESTION**")
     
-    # Calculs des soldes
+    # Calculs des soldes avec détail complet
     valeur_ajoutee = data.get('valeur_ajoutee', 0)
     excedent_brut = data.get('excedent_brut', 0)
     resultat_exploitation = data.get('resultat_exploitation', 0)
     resultat_financier = data.get('resultat_financier', 0)
     resultat_net = data.get('resultat_net', 0)
     
-    # Affichage des soldes
+    # Affichage des soldes avec calculs détaillés
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        st.metric("**Valeur Ajoutée**", f"{valeur_ajoutee:,.0f} FCFA",
-                 delta=f"{(valeur_ajoutee/data.get('chiffre_affaires', 1)*100):.1f}% du CA" if data.get('chiffre_affaires', 0) > 0 else None)
+        st.markdown("#### **📊 FORMATION DE LA VALEUR AJOUTÉE**")
+        st.write(f"Chiffre d'affaires : **{data.get('chiffre_affaires', 0):,.0f}** FCFA")
         
-        st.metric("**Excédent Brut d'Exploitation**", f"{excedent_brut:,.0f} FCFA",
-                 delta=f"{(excedent_brut/data.get('chiffre_affaires', 1)*100):.1f}% du CA" if data.get('chiffre_affaires', 0) > 0 else None)
+        # Détail des consommations
+        consommations = (data.get('achats_marchandises', 0) + data.get('achats_matieres_premieres', 0) + 
+                        data.get('autres_achats', 0) + data.get('transports', 0) + 
+                        data.get('services_exterieurs', 0) + data.get('autres_charges', 0))
+        
+        if consommations > 0:
+            st.write(f"- Consommations externes : **({consommations:,.0f})** FCFA")
+        
+        st.metric("**= VALEUR AJOUTÉE**", f"{valeur_ajoutee:,.0f} FCFA",
+                 delta=f"{(valeur_ajoutee/data.get('chiffre_affaires', 1)*100):.1f}% du CA" if data.get('chiffre_affaires', 0) > 0 else None)
     
     with col2:
-        st.metric("**Résultat d'Exploitation**", f"{resultat_exploitation:,.0f} FCFA",
-                 delta=f"{(resultat_exploitation/data.get('chiffre_affaires', 1)*100):.1f}% du CA" if data.get('chiffre_affaires', 0) > 0 else None)
+        st.markdown("#### **📊 FORMATION DE L'EBE**")
+        st.write(f"Valeur ajoutée : **{valeur_ajoutee:,.0f}** FCFA")
+        if data.get('charges_personnel', 0) > 0:
+            st.write(f"- Charges de personnel : **({data.get('charges_personnel', 0):,.0f})** FCFA")
         
-        st.metric("**Résultat Financier**", f"{resultat_financier:,.0f} FCFA")
+        st.metric("**= EXCÉDENT BRUT EXPLOITATION**", f"{excedent_brut:,.0f} FCFA",
+                 delta=f"{(excedent_brut/data.get('chiffre_affaires', 1)*100):.1f}% du CA" if data.get('chiffre_affaires', 0) > 0 else None)
+        
+        st.markdown("#### **📊 RÉSULTAT D'EXPLOITATION**")
+        if data.get('dotations_amortissements', 0) > 0:
+            st.write(f"- Dotations amortissements : **({data.get('dotations_amortissements', 0):,.0f})** FCFA")
+        
+        st.metric("**= RÉSULTAT EXPLOITATION**", f"{resultat_exploitation:,.0f} FCFA",
+                 delta=f"{(resultat_exploitation/data.get('chiffre_affaires', 1)*100):.1f}% du CA" if data.get('chiffre_affaires', 0) > 0 else None)
     
     with col3:
-        st.metric("**Résultat Net**", f"{resultat_net:,.0f} FCFA",
-                 delta=f"{(resultat_net/data.get('chiffre_affaires', 1)*100):.1f}% du CA" if data.get('chiffre_affaires', 0) > 0 else None)
+        st.markdown("#### **📊 RÉSULTAT FINAL**")
+        
+        if data.get('revenus_financiers', 0) > 0:
+            st.write(f"+ Revenus financiers : **{data.get('revenus_financiers', 0):,.0f}** FCFA")
+        if data.get('frais_financiers', 0) > 0:
+            st.write(f"- Frais financiers : **({data.get('frais_financiers', 0):,.0f})** FCFA")
+        
+        st.metric("**= RÉSULTAT FINANCIER**", f"{resultat_financier:,.0f} FCFA")
+        
+        if data.get('impots_resultat', 0) > 0:
+            st.write(f"- Impôts sur résultat : **({data.get('impots_resultat', 0):,.0f})** FCFA")
+        
+        # Résultat net final avec couleur selon signe
+        if resultat_net >= 0:
+            st.markdown(f"### 🟢 **RÉSULTAT NET : {resultat_net:,.0f} FCFA**")
+            st.caption(f"Soit {(resultat_net/data.get('chiffre_affaires', 1)*100):.1f}% du CA" if data.get('chiffre_affaires', 0) > 0 else "")
+        else:
+            st.markdown(f"### 🔴 **RÉSULTAT NET : {resultat_net:,.0f} FCFA**")
+            st.caption("⚠️ Perte de l'exercice")
     
     # Graphique waterfall des soldes
     create_waterfall_chart(data)
