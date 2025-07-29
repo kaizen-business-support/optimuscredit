@@ -876,11 +876,10 @@ def display_footer():
             </p>
             <p style="margin: 5px 0; font-size: 12px;">
                 Conforme aux normes prudentielles BCEAO 2024 • 
-                Navigation protégée contre les resets
             </p>
             <p style="margin: 5px 0; font-size: 10px;">
                 © 2024 • Tous droits réservés • 
-                <a href="mailto:support@bceao.int" style="color: #1f4e79;">Support Technique</a>
+                <a href="mailto:contact@kaizen-corporation.com" style="color: #1f4e79;">Support Technique</a>
             </p>
         </div>
         """, unsafe_allow_html=True)
