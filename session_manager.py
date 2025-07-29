@@ -1,6 +1,7 @@
 """
-Gestionnaire d'état centralisé pour l'application OptimusCredit - VERSION CORRIGÉE
+Gestionnaire d'état centralisé pour l'application OptimusCredit
 Ce module garantit la cohérence des données entre toutes les pages
+VERSION FIXED - Compatibilité backward complète
 """
 
 import streamlit as st
@@ -72,7 +73,7 @@ class SessionManager:
     @staticmethod
     def store_analysis_results(data: Dict[str, Any], ratios: Dict[str, Any], 
                              scores: Dict[str, Any], metadata: Dict[str, Any]):
-        """Stocke les résultats d'analyse de manière unifiée"""
+        """Stocke les résultats d'analyse de manière unifiée avec COMPATIBILITÉ BACKWARD"""
         
         # Ajouter timestamp si pas présent
         if 'date_analyse' not in metadata:
@@ -87,30 +88,85 @@ class SessionManager:
             'ratios': ratios,
             'scores': scores,
             'metadata': metadata,
-            'version': '2.1.0',
+            'version': '2.1.0',  # Version pour compatibilité future
             'timestamp': datetime.now().isoformat()
         }
         
-        # CORRECTION: Stocker directement sans nettoyer d'abord
+        # Nettoyer d'abord toutes les anciennes données
+        SessionManager.clear_analysis_data()
+        
+        # Stocker la nouvelle analyse
         st.session_state[SessionManager.ANALYSIS_RESULTS] = analysis_results
         
-        # Marquer l'analyse comme terminée
+        # 🔧 CORRECTION CRITIQUE : Maintenir les variables legacy pour compatibilité
+        # avec d'éventuelles autres pages qui les utilisent encore
+        st.session_state['analysis_data'] = data
+        st.session_state['analysis_ratios'] = ratios
+        st.session_state['analysis_scores'] = scores
+        st.session_state['analysis_secteur'] = metadata.get('secteur', '')
+        st.session_state['analysis_done'] = True
+        st.session_state['analysis_date'] = metadata.get('date_analyse', '')
+        
+        # 🔧 NOUVEAU : Variables d'état pour contrôler l'affichage
         st.session_state['analysis_completed'] = True
+        st.session_state['analysis_running'] = False
+        st.session_state['analysis_just_completed'] = True
+    
+    @staticmethod
+    def ensure_backward_compatibility():
+        """Assure la compatibilité backward avec les anciennes variables"""
+        
+        # Si on a analysis_results mais pas les variables legacy, les créer
+        if (SessionManager.ANALYSIS_RESULTS in st.session_state and 
+            'analysis_data' not in st.session_state):
+            
+            analysis_results = st.session_state[SessionManager.ANALYSIS_RESULTS]
+            
+            # Recréer les variables legacy
+            st.session_state['analysis_data'] = analysis_results.get('data', {})
+            st.session_state['analysis_ratios'] = analysis_results.get('ratios', {})
+            st.session_state['analysis_scores'] = analysis_results.get('scores', {})
+            
+            metadata = analysis_results.get('metadata', {})
+            st.session_state['analysis_secteur'] = metadata.get('secteur', '')
+            st.session_state['analysis_done'] = True
+            st.session_state['analysis_date'] = metadata.get('date_analyse', '')
+            st.session_state['analysis_completed'] = True
+            st.session_state['analysis_running'] = False
     
     @staticmethod
     def clear_analysis_data():
         """Nettoie toutes les données d'analyse"""
         
-        # Liste des clés d'analyse à supprimer
+        # Liste exhaustive de toutes les clés d'analyse possibles
         analysis_keys = [
+            # Structure principale
             SessionManager.ANALYSIS_RESULTS,
-            'analysis_completed',
-            'uploaded_file_content',
-            'uploaded_file_name',
-            'uploaded_file_type',
+            
+            # Variables legacy (compatibilité)
+            'analysis_data', 'analysis_ratios', 'analysis_scores', 
+            'analysis_secteur', 'analysis_done', 'analysis_date',
+            
+            # États de l'interface
+            'show_sectoral', 'show_charts', 'current_analysis_file',
+            
+            # États spécifiques aux pages
+            'excel_analysis_complete', 'manual_analysis_complete',
+            'analysis_completed', 'analysis_running', 'analysis_just_completed',
+            
+            # Cache et données temporaires
+            'temp_data', 'temp_ratios', 'temp_scores',
+            'uploaded_file_data', 'file_analysis_progress',
+            
+            # Variables spécifiques au file uploader
+            'uploaded_file_content', 'uploaded_file_name', 'uploaded_file_type',
             'analysis_in_progress',
-            'show_sectoral',
-            'show_charts'
+            
+            # Variables de contrôle d'interface
+            'file_uploader_key', 'complete_reset',
+            
+            # Variables de navigation anciennes
+            'page'
         ]
         
         # Supprimer toutes les clés d'analyse
@@ -122,18 +178,23 @@ class SessionManager:
     def reset_application():
         """Réinitialise complètement l'application"""
         
-        # Incrémenter le compteur de reset
+        # Sauvegarder la page actuelle pour y retourner
+        current_page = st.session_state.get(SessionManager.CURRENT_PAGE, 'home')
+        
+        # IMPORTANT: Sauvegarder l'ancien reset_counter pour l'incrémenter
         old_counter = st.session_state.get(SessionManager.RESET_COUNTER, 0)
-        st.session_state[SessionManager.RESET_COUNTER] = old_counter + 1
         
         # Nettoyer toutes les données d'analyse
         SessionManager.clear_analysis_data()
         
+        # CORRECTION: Incrémenter le compteur de reset pour forcer la recréation des widgets
+        st.session_state[SessionManager.RESET_COUNTER] = old_counter + 1
+        
         # Marquer qu'un reset complet a eu lieu
         st.session_state['complete_reset'] = True
         
-        # Retourner à la page d'import
-        st.session_state[SessionManager.CURRENT_PAGE] = 'excel_import'
+        # Retourner à la page d'import pour un nouveau fichier
+        st.session_state[SessionManager.CURRENT_PAGE] = 'home'
     
     @staticmethod
     def get_current_page() -> str:
@@ -181,19 +242,67 @@ class SessionManager:
             return "Situation faible", "red"
         else:
             return "Situation très faible", "red"
+    
+    @staticmethod
+    def debug_session_state() -> Dict[str, Any]:
+        """Retourne un aperçu de l'état de session pour debug"""
+        debug_info = {
+            'has_analysis': SessionManager.has_analysis_data(),
+            'current_page': SessionManager.get_current_page(),
+            'reset_counter': SessionManager.get_reset_counter(),
+            'total_keys': len(st.session_state.keys()),
+            'analysis_keys': [],
+            'backward_compatibility': {}
+        }
+        
+        # Identifier les clés liées à l'analyse
+        analysis_prefixes = ['analysis_', 'show_', 'temp_', 'file_', 'complete_']
+        for key in st.session_state.keys():
+            if any(key.startswith(prefix) for prefix in analysis_prefixes) or key == SessionManager.ANALYSIS_RESULTS:
+                debug_info['analysis_keys'].append(key)
+        
+        # Vérifier la compatibilité backward
+        legacy_vars = ['analysis_data', 'analysis_ratios', 'analysis_scores', 'analysis_done']
+        for var in legacy_vars:
+            debug_info['backward_compatibility'][var] = var in st.session_state
+        
+        if SessionManager.has_analysis_data():
+            score, metadata = SessionManager.get_analysis_info()
+            debug_info['score'] = score
+            debug_info['secteur'] = metadata.get('secteur', 'N/A')
+            debug_info['date_analyse'] = metadata.get('date_analyse', 'N/A')
+        
+        return debug_info
+    
+    @staticmethod
+    def show_debug_info():
+        """Affiche les informations de debug (à utiliser temporairement)"""
+        debug_info = SessionManager.debug_session_state()
+        
+        with st.expander("🔍 Debug - État de Session", expanded=False):
+            st.json(debug_info)
+            
+            st.markdown("**Toutes les clés de session:**")
+            st.write(list(st.session_state.keys()))
 
 
-# Fonctions utilitaires simplifiées
+# Fonctions utilitaires pour faciliter l'utilisation
 def init_session():
     """Fonction d'initialisation simple à appeler dans main.py"""
     SessionManager.initialize()
+    # 🔧 CORRECTION : Assurer la compatibilité backward à chaque initialisation
+    SessionManager.ensure_backward_compatibility()
 
 def has_analysis() -> bool:
     """Fonction simple pour vérifier la présence d'analyse"""
+    # 🔧 CORRECTION : Assurer la compatibilité avant de vérifier
+    SessionManager.ensure_backward_compatibility()
     return SessionManager.has_analysis_data()
 
 def get_analysis():
     """Fonction simple pour récupérer l'analyse"""
+    # 🔧 CORRECTION : Assurer la compatibilité avant de récupérer
+    SessionManager.ensure_backward_compatibility()
     return SessionManager.get_analysis_data()
 
 def clear_analysis():
