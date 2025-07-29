@@ -1,158 +1,7 @@
-st.caption("Page d'accueil")
-
-def show_basic_analysis_display():
-    """Affichage basique intégré en cas d'échec de tous les autres modules"""
-    
-    st.title("📊 Analyse Financière - Mode Basique")
-    st.info("📋 Affichage simplifié des résultats d'analyse")
-    
-    try:
-        # Récupérer les données via SessionManager
-        analysis_data = SessionManager.get_analysis_data()
-        if not analysis_data:
-            st.error("❌ Aucune donnée d'analyse disponible")
-            return
-        
-        data = analysis_data.get('data', {})
-        ratios = analysis_data.get('ratios', {})
-        scores = analysis_data.get('scores', {})
-        metadata = analysis_data.get('metadata', {})
-        
-        # Affichage du score global
-        st.subheader("🎯 Score Global BCEAO")
-        score_global = scores.get('global', 0)
-        
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            if score_global >= 70:
-                color = "green"
-                status = "Très bonne situation"
-            elif score_global >= 40:
-                color = "orange" 
-                status = "Situation acceptable"
-            else:
-                color = "red"
-                status = "Situation à améliorer"
-            
-            st.markdown(f"""
-            <div style="text-align: center; padding: 20px; border-radius: 10px; background-color: {color}20; border: 2px solid {color};">
-                <h1 style="color: {color}; margin: 0;">{score_global}/100</h1>
-                <p style="color: {color}; margin: 5px 0; font-weight: bold;">{status}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        # Scores par catégorie
-        st.subheader("📈 Scores par Catégorie")
-        
-        col1, col2, col3, col4, col5 = st.columns(5)
-        
-        categories = [
-            ("💧 Liquidité", scores.get('liquidite', 0), 40),
-            ("🏛️ Solvabilité", scores.get('solvabilite', 0), 40),
-            ("📈 Rentabilité", scores.get('rentabilite', 0), 30),
-            ("⚡ Activité", scores.get('activite', 0), 15),
-            ("🔧 Gestion", scores.get('gestion', 0), 15)
-        ]
-        
-        cols = [col1, col2, col3, col4, col5]
-        
-        for i, (label, score, max_score) in enumerate(categories):
-            with cols[i]:
-                percentage = (score / max_score) * 100
-                st.metric(label, f"{score}/{max_score}", f"{percentage:.0f}%")
-        
-        # Données financières principales
-        st.subheader("💰 Données Financières Principales")
-        
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("**Bilan**")
-            st.write(f"• Total Actif: {data.get('total_actif', 0):,.0f} FCFA".replace(',', ' '))
-            st.write(f"• Capitaux Propres: {data.get('capitaux_propres', 0):,.0f} FCFA".replace(',', ' '))
-            st.write(f"• Dettes Totales: {(data.get('dettes_financieres', 0) + data.get('dettes_court_terme', 0)):,.0f} FCFA".replace(',', ' '))
-        
-        with col2:
-            st.markdown("**Compte de Résultat**")
-            st.write(f"• Chiffre d'Affaires: {data.get('chiffre_affaires', 0):,.0f} FCFA".replace(',', ' '))
-            st.write(f"• Résultat Net: {data.get('resultat_net', 0):,.0f} FCFA".replace(',', ' '))
-            ca = data.get('chiffre_affaires', 1)
-            marge = (data.get('resultat_net', 0) / ca * 100) if ca > 0 else 0
-            st.write(f"• Marge Nette: {marge:.1f}%")
-        
-        # Ratios principaux
-        st.subheader("📊 Ratios Principaux")
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            liquidite = ratios.get('ratio_liquidite_generale', 0)
-            st.metric("Liquidité Générale", f"{liquidite:.2f}")
-        
-        with col2:
-            autonomie = ratios.get('ratio_autonomie_financiere', 0)
-            st.metric("Autonomie Financière", f"{autonomie:.1f}%")
-        
-        with col3:
-            if st.button("🔄 Nouvelle Analyse", key=f"basic_reset_{nav_ts}", type="secondary", use_container_width=True):
-                if st.session_state.get(f'basic_confirm_reset_{nav_ts}', False):
-                    protected_reset()
-                else:
-                    st.session_state[f'basic_confirm_reset_{nav_ts}'] = True
-                    st.warning("⚠️ Cliquez à nouveau pour confirmer")
-        
-        # Note sur le mode basique
-        st.info("💡 **Mode d'affichage basique** - Pour une analyse plus détaillée, assurez-vous que les modules d'analyse avancés sont disponibles.")
-        
-    except Exception as e:
-        st.error(f"❌ Erreur dans l'affichage basique: {e}")
-        st.error("Retour à l'accueil recommandé.")
-        
-        if st.button("🏠 Retour Accueil", key="error_home_basic", type="primary"):
-            navigate_to_page('home')
-            roe = ratios.get('roe', 0)
-            st.metric("ROE", f"{roe:.1f}%")
-        
-        with col4:
-            marge_nette = ratios.get('marge_nette', 0)
-            st.metric("Marge Nette", f"{marge_nette:.1f}%")
-        
-        # Informations sur l'analyse
-        st.subheader("ℹ️ Informations sur l'Analyse")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        with col1:
-            secteur = metadata.get('secteur', 'Non spécifié')
-            st.info(f"**Secteur:** {secteur.replace('_', ' ').title()}")
-        
-        with col2:
-            source = metadata.get('source', 'Non spécifiée')
-            st.info(f"**Source:** {source}")
-        
-        with col3:
-            date_analyse = metadata.get('date_analyse', 'Non spécifiée')
-            st.info(f"**Date:** {date_analyse}")
-        
-        # Actions
-        st.subheader("🚀 Actions Disponibles")
-        
-        col1, col2, col3 = st.columns(3)
-        
-        nav_ts = st.session_state.get('nav_timestamp', int(time.time()))
-        
-        with col1:
-            if st.button("🏠 Retour Accueil", key=f"basic_home_{nav_ts}", type="secondary", use_container_width=True):
-                navigate_to_page('home')
-        
-        with col2:
-            if st.button("📊 Nouvelle Saisie", key=f"basic_input_{nav_ts}", type="primary", use_container_width=True):
-                navigate_to_page('unified_input')
-        
-        with col3:
-            """
+"""
 Application principale OptimusCredit - Analyse Financière BCEAO
-Version 2.1 ANTI-RESET - CORRECTIONS DEFINITIVES
+Version 2.1 ANTI-RESET - FICHIER COMPLET ET FINAL
+Développé par Kaizen Business Support
 """
 
 import streamlit as st
@@ -861,8 +710,159 @@ def show_unknown_page_error(page_name):
             protected_reset()
         st.caption("Reset complet")
 
+def show_basic_analysis_display():
+    """Affichage basique intégré en cas d'échec de tous les autres modules"""
+    
+    st.title("📊 Analyse Financière - Mode Basique")
+    st.info("📋 Affichage simplifié des résultats d'analyse")
+    
+    try:
+        # Récupérer les données via SessionManager
+        analysis_data = SessionManager.get_analysis_data()
+        if not analysis_data:
+            st.error("❌ Aucune donnée d'analyse disponible")
+            return
+        
+        data = analysis_data.get('data', {})
+        ratios = analysis_data.get('ratios', {})
+        scores = analysis_data.get('scores', {})
+        metadata = analysis_data.get('metadata', {})
+        
+        # Affichage du score global
+        st.subheader("🎯 Score Global BCEAO")
+        score_global = scores.get('global', 0)
+        
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            if score_global >= 70:
+                color = "green"
+                status = "Très bonne situation"
+            elif score_global >= 40:
+                color = "orange" 
+                status = "Situation acceptable"
+            else:
+                color = "red"
+                status = "Situation à améliorer"
+            
+            st.markdown(f"""
+            <div style="text-align: center; padding: 20px; border-radius: 10px; background-color: {color}20; border: 2px solid {color};">
+                <h1 style="color: {color}; margin: 0;">{score_global}/100</h1>
+                <p style="color: {color}; margin: 5px 0; font-weight: bold;">{status}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        # Scores par catégorie
+        st.subheader("📈 Scores par Catégorie")
+        
+        col1, col2, col3, col4, col5 = st.columns(5)
+        
+        categories = [
+            ("💧 Liquidité", scores.get('liquidite', 0), 40),
+            ("🏛️ Solvabilité", scores.get('solvabilite', 0), 40),
+            ("📈 Rentabilité", scores.get('rentabilite', 0), 30),
+            ("⚡ Activité", scores.get('activite', 0), 15),
+            ("🔧 Gestion", scores.get('gestion', 0), 15)
+        ]
+        
+        cols = [col1, col2, col3, col4, col5]
+        
+        for i, (label, score, max_score) in enumerate(categories):
+            with cols[i]:
+                percentage = (score / max_score) * 100
+                st.metric(label, f"{score}/{max_score}", f"{percentage:.0f}%")
+        
+        # Données financières principales
+        st.subheader("💰 Données Financières Principales")
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**Bilan**")
+            st.write(f"• Total Actif: {data.get('total_actif', 0):,.0f} FCFA".replace(',', ' '))
+            st.write(f"• Capitaux Propres: {data.get('capitaux_propres', 0):,.0f} FCFA".replace(',', ' '))
+            st.write(f"• Dettes Totales: {(data.get('dettes_financieres', 0) + data.get('dettes_court_terme', 0)):,.0f} FCFA".replace(',', ' '))
+        
+        with col2:
+            st.markdown("**Compte de Résultat**")
+            st.write(f"• Chiffre d'Affaires: {data.get('chiffre_affaires', 0):,.0f} FCFA".replace(',', ' '))
+            st.write(f"• Résultat Net: {data.get('resultat_net', 0):,.0f} FCFA".replace(',', ' '))
+            ca = data.get('chiffre_affaires', 1)
+            marge = (data.get('resultat_net', 0) / ca * 100) if ca > 0 else 0
+            st.write(f"• Marge Nette: {marge:.1f}%")
+        
+        # Ratios principaux
+        st.subheader("📊 Ratios Principaux")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            liquidite = ratios.get('ratio_liquidite_generale', 0)
+            st.metric("Liquidité Générale", f"{liquidite:.2f}")
+        
+        with col2:
+            autonomie = ratios.get('ratio_autonomie_financiere', 0)
+            st.metric("Autonomie Financière", f"{autonomie:.1f}%")
+        
+        with col3:
+            roe = ratios.get('roe', 0)
+            st.metric("ROE", f"{roe:.1f}%")
+        
+        with col4:
+            marge_nette = ratios.get('marge_nette', 0)
+            st.metric("Marge Nette", f"{marge_nette:.1f}%")
+        
+        # Informations sur l'analyse
+        st.subheader("ℹ️ Informations sur l'Analyse")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            secteur = metadata.get('secteur', 'Non spécifié')
+            st.info(f"**Secteur:** {secteur.replace('_', ' ').title()}")
+        
+        with col2:
+            source = metadata.get('source', 'Non spécifiée')
+            st.info(f"**Source:** {source}")
+        
+        with col3:
+            date_analyse = metadata.get('date_analyse', 'Non spécifiée')
+            st.info(f"**Date:** {date_analyse}")
+        
+        # Actions
+        st.subheader("🚀 Actions Disponibles")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        nav_ts = st.session_state.get('nav_timestamp', int(time.time()))
+        
+        with col1:
+            if st.button("🏠 Retour Accueil", key=f"basic_home_{nav_ts}", type="secondary", use_container_width=True):
+                navigate_to_page('home')
+        
+        with col2:
+            if st.button("📊 Nouvelle Saisie", key=f"basic_input_{nav_ts}", type="primary", use_container_width=True):
+                navigate_to_page('unified_input')
+        
+        with col3:
+            if st.button("🔄 Nouvelle Analyse", key=f"basic_reset_{nav_ts}", type="secondary", use_container_width=True):
+                if st.session_state.get(f'basic_confirm_reset_{nav_ts}', False):
+                    protected_reset()
+                else:
+                    st.session_state[f'basic_confirm_reset_{nav_ts}'] = True
+                    st.warning("⚠️ Cliquez à nouveau pour confirmer")
+        
+        # Note sur le mode basique
+        st.info("💡 **Mode d'affichage basique** - Pour une analyse plus détaillée, assurez-vous que les modules d'analyse avancés sont disponibles.")
+        
+    except Exception as e:
+        st.error(f"❌ Erreur dans l'affichage basique: {e}")
+        st.error("Retour à l'accueil recommandé.")
+        
+        if st.button("🏠 Retour Accueil", key="error_home_basic", type="primary"):
+            navigate_to_page('home')
+
 def display_footer():
-    """Affiche le pied de page de l'application"""
+    """Affiche le pied de page de l'application avec Kaizen Business Support"""
     
     st.markdown("---")
     
@@ -876,9 +876,10 @@ def display_footer():
             </p>
             <p style="margin: 5px 0; font-size: 12px;">
                 Conforme aux normes prudentielles BCEAO 2024 • 
+                Navigation protégée contre les resets
             </p>
             <p style="margin: 5px 0; font-size: 10px;">
-                © 2024 • Tous droits réservés • 
+                © 2024 Kaizen Business Support • Tous droits réservés • 
                 <a href="mailto:contact@kaizen-corporation.com" style="color: #1f4e79;">Support Technique</a>
             </p>
         </div>
