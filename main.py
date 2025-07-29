@@ -1,6 +1,6 @@
 """
 Application principale OptimusCredit - Analyse Financière BCEAO
-Version 2.1 complète avec gestionnaire d'état centralisé - CORRECTION CLÉS
+Version 2.1 complète avec gestionnaire d'état centralisé - FICHIER COMPLET
 Compatible avec unified_input.py et analysis_detailed.py
 """
 
@@ -662,3 +662,76 @@ def show_import_error_page(page_name):
     with col1:
         # CORRECTION: Clé unique pour éviter conflits
         error_home_key = f"import_error_home_{page_name}_{reset_counter}"
+        if st.button("🏠 Retour Accueil", key=error_home_key, type="primary", use_container_width=True):
+            SessionManager.set_current_page('home')
+            st.rerun()
+        st.caption("Retour sécurisé")
+    
+    with col2:
+        # CORRECTION: Clé unique pour éviter conflits
+        error_input_key = f"import_error_input_{page_name}_{reset_counter}"
+        if st.button("📊 Saisir Données", key=error_input_key, type="secondary", use_container_width=True):
+            SessionManager.set_current_page('unified_input')
+            st.rerun()
+        st.caption("Import ou saisie")
+
+def show_unknown_page_error(page_name):
+    """Affiche une page d'erreur pour les pages inconnues"""
+    
+    st.error(f"❌ Page '{page_name}' non reconnue")
+    
+    st.markdown("""
+    ### 🔧 Erreur de navigation
+    
+    La page demandée n'existe pas ou n'est pas configurée.
+    
+    ### 🚀 Actions de récupération
+    """)
+    
+    col1, col2 = st.columns(2)
+    
+    reset_counter = SessionManager.get_reset_counter()
+    
+    with col1:
+        # CORRECTION: Clé unique pour éviter conflits
+        unknown_home_key = f"unknown_page_home_{page_name}_{reset_counter}"
+        if st.button("🏠 Retour Accueil", key=unknown_home_key, type="primary", use_container_width=True):
+            SessionManager.set_current_page('home')
+            st.rerun()
+        st.caption("Page d'accueil")
+    
+    with col2:
+        # CORRECTION: Clé unique pour éviter conflits
+        unknown_reset_key = f"unknown_page_reset_{page_name}_{reset_counter}"
+        if st.button("🔄 Réinitialiser", key=unknown_reset_key, type="secondary", use_container_width=True):
+            reset_app()
+            st.rerun()
+        st.caption("Reset complet")
+
+def display_footer():
+    """Affiche le pied de page de l'application"""
+    
+    st.markdown("---")
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
+    
+    with col2:
+        st.markdown("""
+        <div style="text-align: center; padding: 20px; color: #666;">
+            <p style="margin: 5px 0;">
+                <strong>OptimusCredit v2.1</strong> • Outil d'Analyse Financière BCEAO
+            </p>
+            <p style="margin: 5px 0; font-size: 12px;">
+                Conforme aux normes prudentielles BCEAO 2024 • 
+                Développé pour l'UEMOA
+            </p>
+            <p style="margin: 5px 0; font-size: 10px;">
+                © 2024 • Tous droits réservés • 
+                <a href="mailto:support@bceao.int" style="color: #1f4e79;">Support Technique</a>
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
+# IMPORTANT: Point d'entrée de l'application
+if __name__ == "__main__":
+    main()
