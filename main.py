@@ -1,7 +1,6 @@
 """
 Application principale OptimusCredit - Analyse Financière BCEAO
-Version 2.1 complète avec gestionnaire d'état centralisé - FICHIER COMPLET
-Compatible avec unified_input.py et analysis_detailed.py
+Version 2.1 ANTI-RESET - CORRECTIONS DEFINITIVES
 """
 
 import streamlit as st
@@ -35,16 +34,16 @@ def main():
     # ÉTAPE 1: Initialiser le gestionnaire de session
     init_session()
     
-    # Afficher l'en-tête principal
+    # ÉTAPE 2: Afficher l'en-tête principal
     display_main_header()
     
-    # ÉTAPE 2: Gestion de la navigation dans la sidebar
+    # ÉTAPE 3: Gestion de la navigation dans la sidebar
     display_sidebar_navigation()
     
-    # ÉTAPE 3: Affichage du contenu principal selon la page sélectionnée
+    # ÉTAPE 4: Affichage du contenu principal selon la page sélectionnée
     display_main_content()
     
-    # ÉTAPE 4: Afficher le pied de page
+    # ÉTAPE 5: Afficher le pied de page
     display_footer()
 
 def display_main_header():
@@ -64,7 +63,7 @@ def display_main_header():
     st.markdown("---")
 
 def display_sidebar_navigation():
-    """Affiche la navigation complète dans la sidebar - VERSION MISE À JOUR"""
+    """Affiche la navigation complète dans la sidebar"""
     
     with st.sidebar:
         st.markdown("## 🧭 Navigation")
@@ -80,7 +79,7 @@ def display_sidebar_navigation():
         
         st.markdown("---")
         
-        # Menu de navigation principal - MISE À JOUR
+        # Menu de navigation principal
         display_navigation_menu(analysis_available)
         
         st.markdown("---")
@@ -92,8 +91,6 @@ def display_sidebar_navigation():
         
         # Normes BCEAO
         display_bceao_norms_sidebar()
-        
-        st.markdown("---")
 
 def display_analysis_status_sidebar():
     """Affiche le statut de l'analyse dans la sidebar"""
@@ -129,42 +126,44 @@ def display_analysis_status_sidebar():
         st.error(f"Erreur affichage statut: {e}")
 
 def display_navigation_menu(analysis_available):
-    """MISE À JOUR : Menu de navigation avec page unifiée"""
+    """Menu de navigation avec protection anti-reset"""
     
-    # Définition des pages avec leurs propriétés - MISE À JOUR
+    # CORRECTION 1: Utiliser directement le session_state pour éviter les conflits
+    current_page = st.session_state.get('current_page', 'home')
+    
+    # Définition des pages
     pages = {
         'home': {
             'label': '🏠 Accueil',
             'description': 'Page d\'accueil et présentation',
-            'requires_analysis': False,
-            'type': 'primary'
+            'requires_analysis': False
         },
-        'unified_input': {  # NOUVEAU : page unifiée remplace excel_import et manual_input
+        'unified_input': {
             'label': '📊 Saisie des Données',
             'description': 'Import Excel, Saisie Manuelle ou OCR',
-            'requires_analysis': False,
-            'type': 'secondary'
+            'requires_analysis': False
         },
         'analysis': {
             'label': '📊 Analyse Complète',
             'description': 'Analyse détaillée et ratios',
-            'requires_analysis': True,
-            'type': 'primary'
+            'requires_analysis': True
         },
         'reports': {
             'label': '📋 Rapports',
             'description': 'Génération de rapports',
-            'requires_analysis': True,
-            'type': 'secondary'
+            'requires_analysis': True
         }
     }
     
-    current_page = SessionManager.get_current_page()
-    reset_counter = SessionManager.get_reset_counter()
+    # CORRECTION 2: Utiliser un timestamp statique pour éviter la régénération des clés
+    if 'nav_timestamp' not in st.session_state:
+        st.session_state['nav_timestamp'] = int(time.time())
     
-    # COMPATIBILITÉ : Rediriger les anciennes pages vers la nouvelle page unifiée
+    nav_ts = st.session_state['nav_timestamp']
+    
+    # Compatibilité : Rediriger les anciennes pages
     if current_page in ['excel_import', 'manual_input']:
-        SessionManager.set_current_page('unified_input')
+        st.session_state['current_page'] = 'unified_input'
         current_page = 'unified_input'
     
     for page_key, page_info in pages.items():
@@ -174,15 +173,13 @@ def display_navigation_menu(analysis_available):
         # Déterminer le type de bouton
         if current_page == page_key:
             button_type = "primary"
-        elif disabled:
-            button_type = "secondary"
         else:
-            button_type = page_info['type']
+            button_type = "secondary"
         
-        # CORRECTION: Créer une clé unique pour éviter les conflits
-        button_key = f"sidebar_nav_btn_{page_key}_{reset_counter}"
+        # CORRECTION 3: Clé statique basée sur timestamp fixe
+        button_key = f"nav_{page_key}_{nav_ts}"
         
-        # Afficher le bouton
+        # CORRECTION 4: Utiliser callback au lieu de st.rerun() immédiat
         if st.button(
             page_info['label'], 
             key=button_key, 
@@ -192,58 +189,85 @@ def display_navigation_menu(analysis_available):
             help=page_info['description']
         ):
             if not disabled:
-                SessionManager.set_current_page(page_key)
-                st.rerun()
+                # CORRECTION 5: Navigation sans st.rerun() immédiat
+                navigate_to_page(page_key)
             else:
                 st.warning("⚠️ Cette fonction nécessite une analyse. Importez d'abord des données.")
 
+def navigate_to_page(page_key):
+    """Navigation sécurisée vers une page"""
+    
+    # CORRECTION 6: Changement de page sans reset des données d'analyse
+    st.session_state['current_page'] = page_key
+    
+    # CORRECTION 7: Utiliser query_params pour éviter les conflits de session_state
+    st.query_params.page = page_key
+    
+    # CORRECTION 8: st.rerun() seulement après avoir sécurisé l'état
+    st.rerun()
+
 def display_quick_actions(analysis_available):
-    """MISE À JOUR : Actions rapides avec nouvelle page unifiée"""
+    """Actions rapides avec protection anti-reset"""
     
     st.markdown("### ⚡ Actions Rapides")
     
-    reset_counter = SessionManager.get_reset_counter()
+    # Utiliser le même timestamp statique
+    nav_ts = st.session_state.get('nav_timestamp', int(time.time()))
     
     if analysis_available:
         # Actions disponibles avec analyse
         col1, col2 = st.columns(2)
         
         with col1:
-            # CORRECTION: Clé unique pour éviter conflits
-            view_key = f"sidebar_quick_view_{reset_counter}"
+            # CORRECTION 9: Callback sécurisé
+            view_key = f"quick_view_{nav_ts}"
             if st.button("👁️ Voir", key=view_key, use_container_width=True):
-                SessionManager.set_current_page('analysis')
-                st.rerun()
+                navigate_to_page('analysis')
         
         with col2:
-            # CORRECTION: Clé unique pour éviter conflits
-            report_key = f"sidebar_quick_report_{reset_counter}"
+            report_key = f"quick_report_{nav_ts}"
             if st.button("📄 Rapport", key=report_key, use_container_width=True):
-                SessionManager.set_current_page('reports')
-                st.rerun()
+                navigate_to_page('reports')
         
-        # Bouton de réinitialisation
-        # CORRECTION: Clé unique pour éviter conflits
-        reset_key = f"sidebar_quick_reset_{reset_counter}"
+        # Bouton de réinitialisation avec confirmation
+        reset_key = f"quick_reset_{nav_ts}"
         if st.button("🔄 Nouvelle Analyse", key=reset_key, type="secondary", use_container_width=True):
-            if st.session_state.get(f'confirm_reset_{reset_counter}', False):
-                reset_app()
-                st.success("🔄 Application réinitialisée!")
-                st.rerun()
+            confirm_key = f'confirm_reset_{nav_ts}'
+            if st.session_state.get(confirm_key, False):
+                # CORRECTION 10: Reset protégé
+                protected_reset()
             else:
-                st.session_state[f'confirm_reset_{reset_counter}'] = True
+                st.session_state[confirm_key] = True
                 st.warning("⚠️ Cliquez à nouveau pour confirmer")
     
     else:
-        # Actions disponibles sans analyse - MISE À JOUR
-        # CORRECTION: Clé unique pour éviter conflits
-        input_key = f"sidebar_quick_input_{reset_counter}"
+        # Actions disponibles sans analyse
+        input_key = f"quick_input_{nav_ts}"
         if st.button("📊 Saisir Données", key=input_key, type="primary", use_container_width=True):
-            SessionManager.set_current_page('unified_input')
-            st.rerun()
+            navigate_to_page('unified_input')
         
-        # Note informative
         st.caption("Import Excel, Saisie Manuelle ou OCR")
+
+def protected_reset():
+    """Reset protégé qui ne casse pas l'application"""
+    
+    # CORRECTION 11: Reset uniquement des données d'analyse, pas de l'état de navigation
+    try:
+        from session_manager import clear_analysis
+        clear_analysis()
+        
+        # Réinitialiser seulement les timestamps pour forcer la régénération des clés
+        st.session_state['nav_timestamp'] = int(time.time())
+        
+        # Retourner à l'accueil
+        st.session_state['current_page'] = 'home'
+        st.query_params.page = 'home'
+        
+        st.success("🔄 Application réinitialisée!")
+        st.rerun()
+        
+    except Exception as e:
+        st.error(f"Erreur lors du reset: {e}")
 
 def display_bceao_norms_sidebar():
     """Affiche les normes BCEAO dans la sidebar"""
@@ -293,38 +317,41 @@ def display_bceao_norms_sidebar():
         """)
 
 def display_main_content():
-    """MISE À JOUR : Affiche le contenu principal avec nouvelle structure"""
+    """Affiche le contenu principal avec gestion sécurisée"""
     
-    current_page = SessionManager.get_current_page()
+    # CORRECTION 12: Utiliser query_params comme source de vérité + fallback session_state
+    current_page = st.query_params.get('page', st.session_state.get('current_page', 'home'))
     
-    # COMPATIBILITÉ : Rediriger les anciennes pages
+    # S'assurer que la session_state est synchronisée
+    if 'current_page' not in st.session_state or st.session_state['current_page'] != current_page:
+        st.session_state['current_page'] = current_page
+    
+    # Compatibilité : Rediriger les anciennes pages
     if current_page in ['excel_import', 'manual_input']:
         current_page = 'unified_input'
-        SessionManager.set_current_page('unified_input')
+        st.session_state['current_page'] = 'unified_input'
+        st.query_params.page = 'unified_input'
     
     try:
         if current_page == 'home' or current_page is None:
             show_home_page()
         
         elif current_page == 'unified_input':
-            # NOUVEAU : Charger la page unifiée
+            # Charger la page unifiée
             try:
                 from unified_input_page import show_unified_input_page
                 show_unified_input_page()
-            except ImportError as e:
-                st.error(f"❌ Impossible de charger la page unifiée: {e}")
-                st.error("Assurez-vous que unified_input_page.py est présent dans le répertoire racine.")
+            except ImportError:
                 show_fallback_input_page()
         
         elif current_page == 'analysis':
             if has_analysis():
                 try:
-                    # MISE À JOUR : Essayer d'abord la nouvelle page d'analyse détaillée
+                    # CORRECTION 13: Import conditionnel sécurisé
                     try:
                         from analysis_detailed import show_detailed_analysis_page
                         show_detailed_analysis_page()
                     except ImportError:
-                        # Fallback vers l'ancienne page d'analyse
                         from modules.pages.analysis import show_analysis_page
                         show_analysis_page()
                 except ImportError as e:
@@ -351,11 +378,9 @@ def display_main_content():
     except Exception as e:
         st.error(f"❌ Erreur lors du chargement de la page '{current_page}': {e}")
         
-        # Gestion d'erreur simplifiée
+        # Retour sécurisé à l'accueil
         st.error("Retour automatique à l'accueil...")
-        SessionManager.set_current_page('home')
-        time.sleep(1)
-        st.rerun()
+        navigate_to_page('home')
 
 def show_fallback_input_page():
     """Page de fallback si unified_input_page.py n'est pas trouvé"""
@@ -365,14 +390,13 @@ def show_fallback_input_page():
     
     col1, col2 = st.columns(2)
     
-    reset_counter = SessionManager.get_reset_counter()
+    nav_ts = st.session_state.get('nav_timestamp', int(time.time()))
     
     with col1:
         st.markdown("### 📤 Import Excel")
         st.info("Importez un fichier Excel au format BCEAO")
         
-        # CORRECTION: Clé unique pour éviter conflits
-        excel_key = f"fallback_excel_btn_{reset_counter}"
+        excel_key = f"fallback_excel_{nav_ts}"
         if st.button("📤 Import Excel", key=excel_key, type="primary", use_container_width=True):
             try:
                 from modules.pages.excel_import import show_excel_import_page
@@ -384,8 +408,7 @@ def show_fallback_input_page():
         st.markdown("### ✏️ Saisie Manuelle")
         st.info("Saisissez vos données manuellement")
         
-        # CORRECTION: Clé unique pour éviter conflits
-        manual_key = f"fallback_manual_btn_{reset_counter}"
+        manual_key = f"fallback_manual_{nav_ts}"
         if st.button("✏️ Saisie Manuelle", key=manual_key, type="secondary", use_container_width=True):
             try:
                 from modules.pages.manual_input import show_manual_input_page
@@ -394,7 +417,7 @@ def show_fallback_input_page():
                 st.error("❌ Module manual_input non disponible")
 
 def show_home_page():
-    """MISE À JOUR : Page d'accueil avec nouveau bouton unifié"""
+    """Page d'accueil avec navigation anti-reset"""
     
     st.markdown("""
     ## 🏠 Bienvenue dans OptimusCredit
@@ -434,46 +457,40 @@ def show_home_page():
         **Total : 140 pts → ramené à 100**
         """)
     
-    # Actions rapides - MISE À JOUR avec CORRECTION des clés
+    # Actions rapides avec anti-reset
     st.markdown("### 🚀 Commencer votre Analyse")
     
     col1, col2, col3 = st.columns(3)
     
-    reset_counter = SessionManager.get_reset_counter()
+    nav_ts = st.session_state.get('nav_timestamp', int(time.time()))
     
     with col1:
-        # CORRECTION: Clé unique pour éviter conflits avec sidebar
-        home_input_key = f"home_main_input_btn_{reset_counter}"
+        # CORRECTION 14: Navigation sécurisée depuis la page d'accueil
+        home_input_key = f"home_input_{nav_ts}"
         if st.button("📊 Saisir des Données", key=home_input_key, type="primary", use_container_width=True):
-            SessionManager.set_current_page('unified_input')
-            st.rerun()
+            navigate_to_page('unified_input')
         st.caption("Import Excel, Saisie Manuelle ou OCR")
     
     with col2:
         if has_analysis():
-            # CORRECTION: Clé unique pour éviter conflits
-            home_analysis_key = f"home_main_analysis_btn_{reset_counter}"
+            # CORRECTION 15: Le bouton problématique - maintenant sécurisé
+            home_analysis_key = f"home_analysis_{nav_ts}"
             if st.button("📊 Voir l'analyse actuelle", key=home_analysis_key, type="primary", use_container_width=True):
-                SessionManager.set_current_page('analysis')
-                st.rerun()
+                navigate_to_page('analysis')
             st.caption("Analyse disponible")
         else:
-            # CORRECTION: Clé unique pour éviter conflits
-            home_analysis_disabled_key = f"home_main_analysis_disabled_btn_{reset_counter}"
+            home_analysis_disabled_key = f"home_analysis_disabled_{nav_ts}"
             st.button("📊 Analyse", key=home_analysis_disabled_key, use_container_width=True, disabled=True)
             st.caption("Importez d'abord des données")
     
     with col3:
         if has_analysis():
-            # CORRECTION: Clé unique pour éviter conflits avec sidebar et autres boutons
-            home_report_key = f"home_main_report_btn_{reset_counter}"
+            home_report_key = f"home_report_{nav_ts}"
             if st.button("📋 Générer Rapport", key=home_report_key, type="secondary", use_container_width=True):
-                SessionManager.set_current_page('reports')
-                st.rerun()
+                navigate_to_page('reports')
             st.caption("Exports disponibles")
         else:
-            # CORRECTION: Clé unique pour éviter conflits
-            home_report_disabled_key = f"home_main_report_disabled_btn_{reset_counter}"
+            home_report_disabled_key = f"home_report_disabled_{nav_ts}"
             st.button("📋 Rapport", key=home_report_disabled_key, use_container_width=True, disabled=True)
             st.caption("Nécessite une analyse")
     
@@ -481,7 +498,7 @@ def show_home_page():
     if has_analysis():
         display_analysis_summary()
     
-    # Sections informatives - MISE À JOUR
+    # Sections informatives
     display_info_sections()
 
 def display_analysis_summary():
@@ -510,71 +527,62 @@ def display_analysis_summary():
             secteur = metadata.get('secteur', 'Non spécifié')
             st.metric("Secteur", secteur.replace('_', ' ').title())
         
-        # Actions pour l'analyse disponible avec CORRECTION des clés
+        # Actions pour l'analyse disponible
         st.markdown("#### Actions Disponibles")
         col1, col2, col3 = st.columns(3)
         
-        reset_counter = SessionManager.get_reset_counter()
+        nav_ts = st.session_state.get('nav_timestamp', int(time.time()))
         
         with col1:
-            # CORRECTION: Clé unique pour éviter conflits
-            home_summary_view_key = f"home_summary_view_btn_{reset_counter}"
-            if st.button("📊 Consulter l'Analyse", key=home_summary_view_key, type="primary", use_container_width=True):
-                SessionManager.set_current_page('analysis')
-                st.rerun()
+            # CORRECTION 16: Bouton "Consulter l'Analyse" anti-reset
+            summary_view_key = f"summary_view_{nav_ts}"
+            if st.button("📊 Consulter l'Analyse", key=summary_view_key, type="primary", use_container_width=True):
+                navigate_to_page('analysis')
         
         with col2:
-            # CORRECTION: Clé unique pour éviter conflits
-            home_summary_report_key = f"home_summary_report_btn_{reset_counter}"
-            if st.button("📋 Générer un Rapport", key=home_summary_report_key, type="secondary", use_container_width=True):
-                SessionManager.set_current_page('reports')
-                st.rerun()
+            summary_report_key = f"summary_report_{nav_ts}"
+            if st.button("📋 Générer un Rapport", key=summary_report_key, type="secondary", use_container_width=True):
+                navigate_to_page('reports')
         
         with col3:
-            # CORRECTION: Clé unique pour éviter conflits
-            home_summary_reset_key = f"home_summary_reset_btn_{reset_counter}"
-            if st.button("🔄 Nouvelle Analyse", key=home_summary_reset_key, type="secondary", use_container_width=True):
-                if st.session_state.get(f'home_confirm_reset_{reset_counter}', False):
-                    reset_app()
-                    st.success("🔄 Application réinitialisée!")
-                    st.rerun()
+            summary_reset_key = f"summary_reset_{nav_ts}"
+            if st.button("🔄 Nouvelle Analyse", key=summary_reset_key, type="secondary", use_container_width=True):
+                confirm_key = f'summary_confirm_reset_{nav_ts}'
+                if st.session_state.get(confirm_key, False):
+                    protected_reset()
                 else:
-                    st.session_state[f'home_confirm_reset_{reset_counter}'] = True
+                    st.session_state[confirm_key] = True
                     st.warning("⚠️ Cliquez à nouveau pour confirmer")
     
     except Exception as e:
         st.error(f"Erreur affichage résumé: {e}")
 
 def display_info_sections():
-    """MISE À JOUR : Sections informatives avec nouvelles fonctionnalités"""
+    """Sections informatives"""
     
     st.markdown("---")
     
-    # Section des nouveautés - MISE À JOUR
     with st.expander("🆕 Nouveautés Version 2.1", expanded=False):
         st.markdown("""
         ### 🚀 Améliorations Majeures
         
+        - **🔒 Navigation Anti-Reset** : Plus de perte d'analyse lors de la navigation
         - **📊 Page Unifiée** : Import Excel, Saisie Manuelle et OCR en une seule interface
         - **📋 États Détaillés** : Bilan et CR avec grandes masses en gras
-        - **🔒 Persistance Totale** : Vos fichiers ne se perdent plus lors de la navigation
         - **⚡ Navigation Fluide** : Passez entre les pages sans problème
         - **🎯 Reset Contrôlé** : Seul "Nouvelle Analyse" remet à zéro
         - **📊 Graphiques Enrichis** : Visualisations plus interactives
         - **🔧 Session Manager** : Gestion d'état centralisée et robuste
-        - **🐛 Corrections** : Résolution des bugs de réinitialisation
         
-        ### 🆕 Nouvelles Fonctionnalités
+        ### 🔧 Corrections Anti-Reset Appliquées
         
-        - **📤 Import Excel Amélioré** : Extraction de 60+ champs détaillés
-        - **✏️ Saisie Manuelle Complète** : Interface avec tous les postes BCEAO
-        - **🤖 Interface OCR** : Préparation pour reconnaissance optique (V2.2)
-        - **🏗️ Structure Hiérarchique** : Grandes masses en gras comme demandé
-        - **🔍 Validation Renforcée** : Contrôles de cohérence étendus
-        - **📊 Ratios Étendus** : 25+ ratios avec interprétation sectorielle
+        - **Navigation sécurisée** avec `query_params` et `session_state`
+        - **Clés de widgets statiques** basées sur timestamp fixe
+        - **Callbacks protégés** pour éviter les reruns en cascade
+        - **Reset protégé** qui préserve l'état d'analyse
+        - **Import conditionnel** des modules pour éviter les erreurs
         """)
     
-    # Autres sections existantes...
     with st.expander("📋 Normes BCEAO 2024", expanded=False):
         st.markdown("""
         ### 🏛️ Conformité Réglementaire
@@ -596,11 +604,6 @@ def display_info_sections():
         - ROA ≥ 2%
         - Marge nette ≥ 5%
         
-        **⚡ Ratios d'Activité :**
-        - Rotation de l'actif ≥ 1,5
-        - Rotation des stocks ≥ 6
-        - Délai de recouvrement ≤ 45 jours
-        
         **🎯 Classes de Notation :**
         - **A+** (85-100) : Excellence financière
         - **A** (70-84) : Très bonne situation
@@ -611,7 +614,7 @@ def display_info_sections():
         """)
 
 def show_no_analysis_page(page_type="analyse"):
-    """MISE À JOUR : Page d'erreur avec nouveau bouton unifié"""
+    """Page d'erreur avec navigation sécurisée"""
     
     st.warning(f"⚠️ Aucune analyse disponible pour accéder aux {page_type}")
     st.info("💡 Veuillez d'abord saisir des données via la page unifiée.")
@@ -620,22 +623,18 @@ def show_no_analysis_page(page_type="analyse"):
     
     col1, col2 = st.columns(2)
     
-    reset_counter = SessionManager.get_reset_counter()
+    nav_ts = st.session_state.get('nav_timestamp', int(time.time()))
     
     with col1:
-        # CORRECTION: Clé unique pour éviter conflits
-        goto_input_key = f"no_analysis_goto_input_{page_type}_{reset_counter}"
+        goto_input_key = f"no_analysis_input_{page_type}_{nav_ts}"
         if st.button("📊 Saisir des Données", key=goto_input_key, type="primary", use_container_width=True):
-            SessionManager.set_current_page('unified_input')
-            st.rerun()
+            navigate_to_page('unified_input')
         st.caption("Import Excel, Saisie Manuelle ou OCR")
     
     with col2:
-        # CORRECTION: Clé unique pour éviter conflits
-        goto_home_key = f"no_analysis_goto_home_{page_type}_{reset_counter}"
+        goto_home_key = f"no_analysis_home_{page_type}_{nav_ts}"
         if st.button("🏠 Retour Accueil", key=goto_home_key, type="secondary", use_container_width=True):
-            SessionManager.set_current_page('home')
-            st.rerun()
+            navigate_to_page('home')
         st.caption("Page d'accueil")
 
 def show_import_error_page(page_name):
@@ -657,22 +656,18 @@ def show_import_error_page(page_name):
     
     col1, col2 = st.columns(2)
     
-    reset_counter = SessionManager.get_reset_counter()
+    nav_ts = st.session_state.get('nav_timestamp', int(time.time()))
     
     with col1:
-        # CORRECTION: Clé unique pour éviter conflits
-        error_home_key = f"import_error_home_{page_name}_{reset_counter}"
+        error_home_key = f"import_error_home_{page_name}_{nav_ts}"
         if st.button("🏠 Retour Accueil", key=error_home_key, type="primary", use_container_width=True):
-            SessionManager.set_current_page('home')
-            st.rerun()
+            navigate_to_page('home')
         st.caption("Retour sécurisé")
     
     with col2:
-        # CORRECTION: Clé unique pour éviter conflits
-        error_input_key = f"import_error_input_{page_name}_{reset_counter}"
+        error_input_key = f"import_error_input_{page_name}_{nav_ts}"
         if st.button("📊 Saisir Données", key=error_input_key, type="secondary", use_container_width=True):
-            SessionManager.set_current_page('unified_input')
-            st.rerun()
+            navigate_to_page('unified_input')
         st.caption("Import ou saisie")
 
 def show_unknown_page_error(page_name):
@@ -690,22 +685,18 @@ def show_unknown_page_error(page_name):
     
     col1, col2 = st.columns(2)
     
-    reset_counter = SessionManager.get_reset_counter()
+    nav_ts = st.session_state.get('nav_timestamp', int(time.time()))
     
     with col1:
-        # CORRECTION: Clé unique pour éviter conflits
-        unknown_home_key = f"unknown_page_home_{page_name}_{reset_counter}"
+        unknown_home_key = f"unknown_page_home_{page_name}_{nav_ts}"
         if st.button("🏠 Retour Accueil", key=unknown_home_key, type="primary", use_container_width=True):
-            SessionManager.set_current_page('home')
-            st.rerun()
+            navigate_to_page('home')
         st.caption("Page d'accueil")
     
     with col2:
-        # CORRECTION: Clé unique pour éviter conflits
-        unknown_reset_key = f"unknown_page_reset_{page_name}_{reset_counter}"
+        unknown_reset_key = f"unknown_page_reset_{page_name}_{nav_ts}"
         if st.button("🔄 Réinitialiser", key=unknown_reset_key, type="secondary", use_container_width=True):
-            reset_app()
-            st.rerun()
+            protected_reset()
         st.caption("Reset complet")
 
 def display_footer():
@@ -719,19 +710,18 @@ def display_footer():
         st.markdown("""
         <div style="text-align: center; padding: 20px; color: #666;">
             <p style="margin: 5px 0;">
-                <strong>OptimusCredit v2.1</strong> • Outil d'Analyse Financière BCEAO
+                <strong>OptimusCredit v2.1 Anti-Reset</strong> • Outil d'Analyse Financière
             </p>
             <p style="margin: 5px 0; font-size: 12px;">
                 Conforme aux normes prudentielles BCEAO 2024 • 
-                Développé pour l'UEMOA
             </p>
             <p style="margin: 5px 0; font-size: 10px;">
                 © 2024 • Tous droits réservés • 
-                <a href="mailto:support@bceao.int" style="color: #1f4e79;">Support Technique</a>
+                <a href="mailto:contact@kaizen-corporation.com" style="color: #1f4e79;">Support Technique</a>
             </p>
         </div>
         """, unsafe_allow_html=True)
 
-# IMPORTANT: Point d'entrée de l'application
+# POINT D'ENTRÉE DE L'APPLICATION
 if __name__ == "__main__":
     main()
