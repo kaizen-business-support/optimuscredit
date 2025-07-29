@@ -752,7 +752,6 @@ def analyze_excel_file(file_content, filename, secteur):
                 store_analysis(data, ratios, scores, metadata)
                 
                 st.success("✅ Analyse terminée avec succès!")
-                st.balloons()
                 
                 # Afficher un résumé rapide
                 score_global = scores.get('global', 0)
@@ -823,7 +822,6 @@ def analyze_manual_data(data, secteur):
             store_analysis(data, ratios, scores, metadata)
             
             st.success("✅ Analyse financière réalisée avec succès!")
-            st.balloons()
             
             # Afficher un résumé rapide
             score_global = scores.get('global', 0)
